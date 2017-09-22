@@ -23,6 +23,8 @@ class Runner
 
   output : ({map}, cb) ->
     out = []
+    out.push "package uidmap"
+    out.push ''
     @output_uid_list { map, out }
     out.push ''
     @output_username_block { map, out }
