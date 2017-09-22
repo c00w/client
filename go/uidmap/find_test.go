@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestFind(t *testing.T) {
+func TestFindAndCheck(t *testing.T) {
 	var findTests = []struct {
 		uid      string
 		username string
@@ -37,8 +37,51 @@ func TestFind(t *testing.T) {
 			t.Fatal(err)
 		}
 		found := Find(uid)
-		if !found.Eq(libkb.NewNormalizedUsername(findTest.username)) {
-			t.Fatalf("Failure for %v: %s != %s", uid, findTest.username, found)
+		expected := libkb.NewNormalizedUsername(findTest.username)
+		if !found.Eq(expected) {
+			t.Fatalf("Failure for %v: %s != %s", uid, expected, found)
 		}
+		if !expected.IsNil() && !CheckUIDAgainstUsername(uid, expected) {
+			t.Fatalf("UID mismatch for %v/%s", uid, expected)
+		}
+	}
+}
+
+func TestCheck(t *testing.T) {
+	var checkTests = []struct {
+		uid      string
+		username string
+	}{
+		{"731f0ec12dfe99134c2932f629f85e19", "a_01586316d6"},
+		{"a8ae731d2e7526902b4e2e08cda30419", "a_01f7ed84"},
+		{"e6ccb1b0db5905a7c762365d1f182819", "a_02961df0"},
+		{"f65191cb570c322d94503168a745ed19", "a_02aba774"},
+		{"d1a22d4be0308c26937e2940cb99b719", "a_035eac44"},
+		{"f1699a37800bfedf0902923804017319", "a_03ce8bdd"},
+		{"e834498c7ad66c8d656ef9430ff9a519", "a_048efd0d"},
+		{"f0d669b599df88fbce0bd4e070124e19", "a_054f0dd1"},
+	}
+
+	for _, checkTest := range checkTests {
+		uid, err := keybase1.UIDFromString(checkTest.uid)
+		if err != nil {
+			t.Fatal(err)
+		}
+		username := libkb.NewNormalizedUsername(checkTest.username)
+		if !CheckUIDAgainstUsername(uid, username) {
+			t.Fatalf("Failure for %v/%s", uid, username)
+		}
+		bad := libkb.NewNormalizedUsername("baaad")
+		if CheckUIDAgainstUsername(uid, bad) {
+			t.Fatalf("Baddie failed: %v", uid)
+		}
+	}
+	uid, err := keybase1.UIDFromString("06f246cc34d13b7f23bb8a53547bb800")
+	if err != nil {
+		t.Fatal(err)
+	}
+	username := libkb.NewNormalizedUsername("max")
+	if CheckUIDAgainstUsername(uid, username) {
+		t.Fatal("Wanted a max failure")
 	}
 }

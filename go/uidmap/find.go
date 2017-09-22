@@ -39,3 +39,12 @@ func Find(uid keybase1.UID) libkb.NormalizedUsername {
 	s := usernames[offset : offset+uint32(lengths[n])]
 	return libkb.NewNormalizedUsername(s)
 }
+
+func CheckUIDAgainstUsername(uid keybase1.UID, un libkb.NormalizedUsername) bool {
+	found := Find(uid)
+	if !found.IsNil() {
+		return found.Eq(un)
+	}
+	computed := libkb.UsernameToUID(un.String())
+	return computed.Equal(uid)
+}
